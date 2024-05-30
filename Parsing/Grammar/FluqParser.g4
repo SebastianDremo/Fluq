@@ -17,7 +17,7 @@ func_declaration:
 FUNC func_name=ID '(' func_declaration_params? ')' '{' func_body '}';
 
 func_call:
-ID'(' func_call_params? ')' 
+func_name=ID'(' func_call_params? ')'  
 | built_in_func;
 
 func_body:

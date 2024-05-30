@@ -370,9 +370,10 @@ public partial class FluqParser : Parser {
 	}
 
 	public partial class Func_callContext : ParserRuleContext {
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode ID() { return GetToken(FluqParser.ID, 0); }
+		public IToken func_name;
 		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode OPEN_BRACKET() { return GetToken(FluqParser.OPEN_BRACKET, 0); }
 		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode CLOSE_BRACKET() { return GetToken(FluqParser.CLOSE_BRACKET, 0); }
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode ID() { return GetToken(FluqParser.ID, 0); }
 		[System.Diagnostics.DebuggerNonUserCode] public Func_call_paramsContext func_call_params() {
 			return GetRuleContext<Func_call_paramsContext>(0);
 		}
@@ -409,7 +410,7 @@ public partial class FluqParser : Parser {
 				EnterOuterAlt(_localctx, 1);
 				{
 				State = 48;
-				Match(ID);
+				_localctx.func_name = Match(ID);
 				State = 49;
 				Match(OPEN_BRACKET);
 				State = 51;
