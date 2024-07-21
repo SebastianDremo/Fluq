@@ -1,2 +1,4 @@
 int x = 10
 int p = 20
+print(p)
+print(x)

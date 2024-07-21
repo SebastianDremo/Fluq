@@ -2,6 +2,8 @@ using System.Reflection;
 using System.Reflection.Emit;
 using Antlr4.Runtime;
 using Antlr4.Runtime.Tree;
+using Compilation.Domain;
+using Compilation.Domain.FuncParam;
 using Compilation.Extensions;
 using Compilation.Statements;
 using Lokad.ILPack;
@@ -15,7 +17,8 @@ public class Compiler
     private MethodBuilder _mainMethodBuilder;
     private AssemblyBuilder _assemblyBuilder;
     private ModuleBuilder _moduleBuilder;
-    
+    private LocalsMap _localsMap;
+
     public Compiler(string program)
     {
         var input = new AntlrFileStream(program);
@@ -28,6 +31,7 @@ public class Compiler
 
         _mainTypeBuilder = GetMainTypeBuilder(new FileInfo(program).Name);
         _mainMethodBuilder = _mainTypeBuilder.DefineMethod("main", MethodAttributes.Public | MethodAttributes.Static);
+        _localsMap = new LocalsMap();
     }
 
     public void Compile()
@@ -35,6 +39,7 @@ public class Compiler
         var listener = new Listener
         {
             SetVariable = OnSetVariable,
+            FunctionCall = OnFunctionCall,
             ProgramEnd = OnProgramEnd
         };
         
@@ -57,10 +62,28 @@ public class Compiler
 
     private void OnSetVariable(SetVariable statement)
     {
-        var il = _mainMethodBuilder.GetILGenerator();
-        LocalBuilder local =  il.DeclareLocal(statement.Variable.VarType.ToDotnetType());
-        il.Emit(OpCodes.Ldc_I4, (int)statement.Value);
-        il.Emit(OpCodes.Stloc, local);
+        var il = _mainMethodBuilder.GetILGenerator(); // it will not work within functions, need to change that in the future
+        LocalBuilder localBuilder =  il.DeclareLocal(statement.Variable.VarType.ToDotnetType());
+        _localsMap.TrySetLocal(
+            _mainMethodBuilder.Name,
+            statement.Variable.Name,
+            localBuilder,
+            out Local local
+            );
+        
+        il.Emit(OpCodes.Ldc_I4, (int)statement.Value); // accepts only i4, no strings or floats
+        il.Emit(OpCodes.Stloc, local.Builder);
+    }
+
+    private void OnFunctionCall(FunctionCall statement)
+    {
+        if (statement.FunctionName.Equals("print")) // it cannot work like that, need to move that to some 
+        {
+            var il = _mainMethodBuilder.GetILGenerator();
+            var param = statement.Params[0] as TextParam;
+            _localsMap.TryGetLocal(_mainMethodBuilder.Name, param.Text, out Local local);
+            il.EmitWriteLine(local.Builder);
+        }
     }
 
     private TypeBuilder GetMainTypeBuilder(string name)
